@@ -56,7 +56,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function initializeTheme() {
-    if (localStorage.getItem("theme") === "dark") {
+    const savedTheme = localStorage.getItem("theme");
+    if (
+      savedTheme === "dark" ||
+      (savedTheme === null &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches)
+    ) {
       document.body.classList.add("dark-mode");
     }
     updateThemeToggle();
