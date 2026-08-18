@@ -121,14 +121,14 @@ initial_activities = {
         "participants": ["james@mergington.edu", "benjamin@mergington.edu"]
     },
     "Manga Maniacs": {
-        "description": "Dive into action-packed adventures, heartfelt friendships, and unforgettable heroes inspired by Japanese Manga.",
-        "schedule": "Tuesdays at 5pm",
+        "description": "Explore the fantastic stories of the most interesting characters from Japanese Manga (graphic novels).",
+        "schedule": "Tuesdays at 7pm",
         "schedule_details": {
             "days": ["Tuesday"],
-            "start_time": "17:00",
-            "end_time": "18:00"
+            "start_time": "19:00",
+            "end_time": "20:00"
         },
-        "max_participants": 25,
+        "max_participants": 15,
         "participants": []
     },
     "Debate Team": {
