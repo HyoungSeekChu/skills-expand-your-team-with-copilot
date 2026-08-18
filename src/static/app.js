@@ -24,6 +24,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("login-form");
   const closeLoginModal = document.querySelector(".close-login-modal");
   const loginMessage = document.getElementById("login-message");
+  const schoolName =
+    document.body.dataset.schoolName || "Mergington High School";
+  const activityAnchorHashSeed = 7; // Non-zero seed to keep generated anchors stable.
   const themeToggle = document.getElementById("theme-toggle");
 
   // Activity categories with corresponding colors
@@ -333,6 +336,51 @@ document.addEventListener("DOMContentLoaded", () => {
     return details.schedule;
   }
 
+  function getActivitySlug(activityName) {
+    return activityName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  }
+
+  function getActivityAnchor(activityName) {
+    const hash = Array.from(activityName)
+      .reduce(
+        (acc, char) => (Math.imul(acc, 31) + char.charCodeAt(0)) >>> 0,
+        activityAnchorHashSeed
+      )
+      .toString(36);
+    return `${getActivitySlug(activityName)}-${hash}`;
+  }
+
+  function sanitizeShareContent(value) {
+    return String(value).replace(/[\r\n\t]+/g, " ").trim();
+  }
+
+  function escapeHtmlAttribute(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/"/g, "&quot;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  function getActivityShareLinks(activityName, formattedSchedule, activityAnchor) {
+    const activityPageUrl = `${window.location.origin}${window.location.pathname}#activity-${activityAnchor}`;
+    const safeActivityName = sanitizeShareContent(activityName);
+    const safeSchoolName = sanitizeShareContent(schoolName);
+    const safeSchedule = sanitizeShareContent(formattedSchedule);
+    const shareText = `Check out ${safeActivityName} at ${safeSchoolName}: ${safeSchedule}`;
+    const shareTextWithUrl = `${shareText}\n${activityPageUrl}`;
+
+    return {
+      whatsapp: `https://wa.me/?text=${encodeURIComponent(shareTextWithUrl)}`,
+      x: `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+        shareText
+      )}&url=${encodeURIComponent(activityPageUrl)}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+        activityPageUrl
+      )}`,
+    };
+  }
+
   // Function to determine activity type (this would ideally come from backend)
   function getActivityType(activityName, description) {
     const name = activityName.toLowerCase();
@@ -505,6 +553,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderActivityCard(name, details) {
     const activityCard = document.createElement("div");
     activityCard.className = "activity-card";
+    const activityAnchor = getActivityAnchor(name);
+    activityCard.id = `activity-${activityAnchor}`;
 
     // Calculate spots and capacity
     const totalSpots = details.max_participants;
@@ -527,6 +577,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Format the schedule using the new helper function
     const formattedSchedule = formatSchedule(details);
+    const shareLinks = getActivityShareLinks(
+      name,
+      formattedSchedule,
+      activityAnchor
+    );
+    const escapedShareLinks = {
+      whatsapp: escapeHtmlAttribute(shareLinks.whatsapp),
+      x: escapeHtmlAttribute(shareLinks.x),
+      facebook: escapeHtmlAttribute(shareLinks.facebook),
+    };
+    const escapedActivityName = escapeHtmlAttribute(name);
 
     // Create activity tag
     const tagHtml = `
@@ -597,6 +658,36 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         `
         }
+        <div class="share-actions" aria-label="Share this activity">
+          <span class="share-label">Share:</span>
+          <a
+            class="share-button share-whatsapp"
+            href="${escapedShareLinks.whatsapp}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Share ${escapedActivityName} on WhatsApp"
+          >
+            WhatsApp
+          </a>
+          <a
+            class="share-button share-x"
+            href="${escapedShareLinks.x}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Share ${escapedActivityName} on X"
+          >
+            X
+          </a>
+          <a
+            class="share-button share-facebook"
+            href="${escapedShareLinks.facebook}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Share ${escapedActivityName} on Facebook"
+          >
+            Facebook
+          </a>
+        </div>
       </div>
     `;
 
